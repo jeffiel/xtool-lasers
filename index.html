@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>xTool Laser Selector</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f0f2f5;
+      --surface: #ffffff;
+      --border: #e2e5ea;
+      --text: #1a1d23;
+      --text-secondary: #6b7280;
+      --accent: #e8622a;
+      --accent-hover: #d4541f;
+      --radius: 12px;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: #12151c;
+      color: white;
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    header h1 span {
+      color: var(--accent);
+    }
+
+    header p {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+
+    .controls {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 520px) {
+      .controls { grid-template-columns: 1fr; }
+    }
+
+    .control-group label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .control-group select {
+      width: 100%;
+      padding: 11px 36px 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .control-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(232, 98, 42, 0.15);
+    }
+
+    .control-group select:hover {
+      border-color: #c5c9d0;
+    }
+
+    /* Results */
+    #results {
+      margin-top: 28px;
+    }
+
+    .results-heading {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+
+    .results-heading span {
+      color: var(--accent);
+      font-size: 0.9rem;
+      letter-spacing: 0;
+      text-transform: none;
+      font-weight: 700;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      border-top: 3px solid var(--laser-color, var(--accent));
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+
+    .card-model {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .card-laser-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: var(--laser-bg, #f3f4f6);
+      color: var(--laser-color, var(--accent));
+      margin-bottom: 14px;
+    }
+
+    .card-laser-type::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .card-specs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+    }
+
+    .spec-label {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+    }
+
+    .spec-value {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 0;
+    }
+
+    .action-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .action-badge.cutting {
+      background: #fef2eb;
+      color: #c0531a;
+    }
+
+    .action-badge.engraving {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    /* Empty / placeholder states */
+    .state-box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    .state-box .icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      display: block;
+      filter: grayscale(1) opacity(0.5);
+    }
+
+    .state-box p {
+      font-size: 0.95rem;
+    }
+
+    .state-box strong {
+      display: block;
+      font-size: 1.05rem;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    /* Laser type colors */
+    .lt-co2       { --laser-color: #dc2626; --laser-bg: #fef2f2; }
+    .lt-ir        { --laser-color: #d97706; --laser-bg: #fffbeb; }
+    .lt-blue      { --laser-color: #2563eb; --laser-bg: #eff6ff; }
+    .lt-mopa      { --laser-color: #7c3aed; --laser-bg: #f5f3ff; }
+    .lt-uv        { --laser-color: #9333ea; --laser-bg: #faf5ff; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>x<span>Tool</span> Laser Selector</h1>
+  <p>Find the right machine and laser for your material</p>
+</header>
+
+<main>
+  <div class="controls">
+    <div class="control-group">
+      <label for="sel-material">Material</label>
+      <select id="sel-material">
+        <option value="">— Select a material —</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="sel-action">Operation</label>
+      <select id="sel-action">
+        <option value="">— Select an operation —</option>
+        <option value="cutting">Cutting</option>
+        <option value="engraving">Engraving</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="results"></div>
+</main>
+
+<script>
+// ─── Data ──────────────────────────────────────────────────────────────────
+const laserData = [
+  {
+    model: "P2",
+    laserType: "CO2",
+    wavelength: "10640 nm",
+    power: "55W",
+    cutting:   ["Acrylic", "Fabric", "Leather", "Wood"],
+    engraving: ["Bamboo", "Ceramic", "Glass", "Metal"]
+  },
+  {
+    model: "P3",
+    laserType: "CO2",
+    wavelength: "10600 nm",
+    power: "80W",
+    cutting:   ["Acrylic", "Fabric", "Leather", "Wood"],
+    engraving: ["Bamboo", "Ceramic", "Glass", "Metal"]
+  },
+  {
+    model: "P3",
+    laserType: "IR (Fiber)",
+    wavelength: "1064 nm",
+    power: "5W",
+    cutting:   ["Aluminum", "Brass", "Stainless Steel"],
+    engraving: ["Aluminum", "Brass", "Gold", "Plastic", "Platinum", "Silver", "Stainless Steel", "Titanium"]
+  },
+  {
+    model: "F1 Ultra",
+    laserType: "IR (Fiber)",
+    wavelength: "1064 nm",
+    power: "20W",
+    cutting:   ["Aluminum", "Brass", "Stainless Steel"],
+    engraving: ["Aluminum", "Brass", "Gold", "Plastic", "Platinum", "Silver", "Stainless Steel", "Titanium"]
+  },
+  {
+    model: "F1 Ultra",
+    laserType: "Blue Diode",
+    wavelength: "445 nm",
+    power: "20W",
+    cutting:   ["Felt", "Leather", "MDF", "Paper", "Some Dark Opaque Acrylic", "Wood"],
+    engraving: ["Bamboo", "Brick", "Cement", "Ceramic", "Dark Glass", "Fabric", "Jade",
+                "Leather", "MDF", "Marble", "Painted Metal", "Paper", "Plated Metal",
+                "Shale", "Some Dark Opaque Acrylic", "Stainless Steel", "Wood"]
+  },
+  {
+    model: "F2 Ultra",
+    laserType: "MOPA (Fiber)",
+    wavelength: "1064 nm",
+    power: "60W",
+    cutting:   ["Aluminum", "Brass", "Stainless Steel"],
+    engraving: ["Aluminum", "Brass", "Gold", "Plastic", "Platinum", "Silver", "Stainless Steel", "Titanium"]
+  },
+  {
+    model: "F2 Ultra",
+    laserType: "Blue Diode",
+    wavelength: "445 nm",
+    power: "40W",
+    cutting:   ["Felt", "Leather", "MDF", "Paper", "Some Dark Opaque Acrylic", "Wood"],
+    engraving: ["Bamboo", "Brick", "Cement", "Ceramic", "Dark Glass", "Fabric", "Jade",
+                "Leather", "MDF", "Marble", "Painted Metal", "Paper", "Plated Metal",
+                "Shale", "Some Dark Opaque Acrylic", "Stainless Steel", "Wood"]
+  },
+  {
+    model: "F2 Ultra UV",
+    laserType: "UV",
+    wavelength: "355 nm",
+    power: "5W",
+    cutting:   ["Acrylic", "Fabric", "Glass", "Leather", "Paper", "Plastic", "Wood"],
+    engraving: ["Acrylic", "Ceramic", "Crystal", "Glass", "Leather", "Metal", "Plastic", "Rubber", "Silicone", "Wood"]
+  }
+];
+
+// ─── Collect all unique materials ─────────────────────────────────────────
+const allMaterials = [...new Set(
+  laserData.flatMap(r => [...r.cutting, ...r.engraving])
+)].sort((a, b) => a.localeCompare(b));
+
+// ─── Populate material dropdown ───────────────────────────────────────────
+const selMaterial = document.getElementById('sel-material');
+const selAction   = document.getElementById('sel-action');
+const resultsEl   = document.getElementById('results');
+
+allMaterials.forEach(m => {
+  const opt = document.createElement('option');
+  opt.value = m;
+  opt.textContent = m;
+  selMaterial.appendChild(opt);
+});
+
+// ─── Laser type → CSS class & display color ───────────────────────────────
+function laserClass(laserType) {
+  if (laserType === 'CO2')          return 'lt-co2';
+  if (laserType === 'IR (Fiber)')   return 'lt-ir';
+  if (laserType === 'Blue Diode')   return 'lt-blue';
+  if (laserType === 'MOPA (Fiber)') return 'lt-mopa';
+  if (laserType === 'UV')           return 'lt-uv';
+  return '';
+}
+
+// ─── Render results ───────────────────────────────────────────────────────
+function render() {
+  const material = selMaterial.value;
+  const action   = selAction.value;
+
+  if (!material && !action) {
+    resultsEl.innerHTML = `
+      <div class="state-box">
+        <span class="icon">🔍</span>
+        <strong>Select a material and operation</strong>
+        <p>Use the dropdowns above to find compatible laser machines.</p>
+      </div>`;
+    return;
+  }
+
+  if (!material || !action) {
+    resultsEl.innerHTML = `
+      <div class="state-box">
+        <span class="icon">👆</span>
+        <p>${!material ? 'Choose a material to continue.' : 'Choose an operation (cutting or engraving) to continue.'}</p>
+      </div>`;
+    return;
+  }
+
+  const matches = laserData.filter(row =>
+    row[action].some(m => m.toLowerCase() === material.toLowerCase())
+  );
+
+  if (matches.length === 0) {
+    resultsEl.innerHTML = `
+      <div class="state-box">
+        <span class="icon">❌</span>
+        <strong>No compatible machines found</strong>
+        <p>${action === 'cutting' ? 'Cutting' : 'Engraving'} <em>${material}</em> is not supported by any listed machine.</p>
+      </div>`;
+    return;
+  }
+
+  const plural = matches.length === 1 ? 'machine' : 'machines';
+  const actionLabel = action === 'cutting' ? 'Cutting' : 'Engraving';
+
+  resultsEl.innerHTML = `
+    <p class="results-heading">
+      ${matches.length} compatible ${plural} for
+      <span>${actionLabel} · ${material}</span>
+    </p>
+    <div class="cards">
+      ${matches.map(row => `
+        <div class="card ${laserClass(row.laserType)}">
+          <div class="card-model">${row.model}</div>
+          <span class="card-laser-type">${row.laserType}</span>
+          <div class="card-specs">
+            <div class="spec-row">
+              <span class="spec-label">Wavelength</span>
+              <span class="spec-value">${row.wavelength}</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Power</span>
+              <span class="spec-value">${row.power}</span>
+            </div>
+            <div class="divider"></div>
+            <div class="spec-row">
+              <span class="spec-label">Operation</span>
+              <span class="action-badge ${action}">${actionLabel}</span>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+selMaterial.addEventListener('change', render);
+selAction.addEventListener('change', render);
+
+render();
+</script>
+</body>
+</html>
