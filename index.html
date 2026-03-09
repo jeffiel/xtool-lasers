@@ -50,6 +50,30 @@
       color: #9ca3af;
     }
 
+    .live-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      vertical-align: middle;
+      letter-spacing: 0.03em;
+    }
+
+    .offline-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      vertical-align: middle;
+      letter-spacing: 0.03em;
+    }
+
     main {
       max-width: 860px;
       margin: 0 auto;
@@ -293,126 +317,158 @@
 </main>
 
 <script>
-// ─── Data ──────────────────────────────────────────────────────────────────
-const laserData = [
-  {
-    model: "P2",
-    laserType: "CO2",
-    wavelength: "10640 nm",
-    power: "55W",
-    cutting:   ["Acrylic", "Fabric", "Leather", "Wood"],
-    engraving: ["Bamboo", "Ceramic", "Glass", "Metal"]
-  },
-  {
-    model: "P3",
-    laserType: "CO2",
-    wavelength: "10600 nm",
-    power: "80W",
-    cutting:   ["Acrylic", "Fabric", "Leather", "Wood"],
-    engraving: ["Bamboo", "Ceramic", "Glass", "Metal"]
-  },
-  {
-    model: "P3",
-    laserType: "IR (Fiber)",
-    wavelength: "1064 nm",
-    power: "5W",
-    cutting:   ["Aluminum", "Brass", "Stainless Steel"],
-    engraving: ["Aluminum", "Brass", "Gold", "Plastic", "Platinum", "Silver", "Stainless Steel", "Titanium"]
-  },
-  {
-    model: "F1 Ultra",
-    laserType: "IR (Fiber)",
-    wavelength: "1064 nm",
-    power: "20W",
-    cutting:   ["Aluminum", "Brass", "Stainless Steel"],
-    engraving: ["Aluminum", "Brass", "Gold", "Plastic", "Platinum", "Silver", "Stainless Steel", "Titanium"]
-  },
-  {
-    model: "F1 Ultra",
-    laserType: "Blue Diode",
-    wavelength: "445 nm",
-    power: "20W",
-    cutting:   ["Felt", "Leather", "MDF", "Paper", "Some Dark Opaque Acrylic", "Wood"],
-    engraving: ["Bamboo", "Brick", "Cement", "Ceramic", "Dark Glass", "Fabric", "Jade",
-                "Leather", "MDF", "Marble", "Painted Metal", "Paper", "Plated Metal",
-                "Shale", "Some Dark Opaque Acrylic", "Stainless Steel", "Wood"]
-  },
-  {
-    model: "F2 Ultra",
-    laserType: "MOPA (Fiber)",
-    wavelength: "1064 nm",
-    power: "60W",
-    cutting:   ["Aluminum", "Brass", "Stainless Steel"],
-    engraving: ["Aluminum", "Brass", "Gold", "Plastic", "Platinum", "Silver", "Stainless Steel", "Titanium"]
-  },
-  {
-    model: "F2 Ultra",
-    laserType: "Blue Diode",
-    wavelength: "445 nm",
-    power: "40W",
-    cutting:   ["Felt", "Leather", "MDF", "Paper", "Some Dark Opaque Acrylic", "Wood"],
-    engraving: ["Bamboo", "Brick", "Cement", "Ceramic", "Dark Glass", "Fabric", "Jade",
-                "Leather", "MDF", "Marble", "Painted Metal", "Paper", "Plated Metal",
-                "Shale", "Some Dark Opaque Acrylic", "Stainless Steel", "Wood"]
-  },
-  {
-    model: "F2 Ultra UV",
-    laserType: "UV",
-    wavelength: "355 nm",
-    power: "5W",
-    cutting:   ["Acrylic", "Fabric", "Glass", "Leather", "Paper", "Plastic", "Wood"],
-    engraving: ["Acrylic", "Ceramic", "Crystal", "Glass", "Leather", "Metal", "Plastic", "Rubber", "Silicone", "Wood"]
-  }
+// ─── Sheet source ──────────────────────────────────────────────────────────
+const SHEET_ID = '1D8IwqrZlZ952c4S_OgaL-f1SaiIxrfPofkOPQOaPZac';
+
+// ─── Fallback data (used if fetch fails due to CORS / network) ─────────────
+const FALLBACK_DATA = [
+  { model:"P2",         laserType:"CO2",          wavelength:"10640 nm", power:"55W",
+    cutting:  ["Wood","Acrylic","Fabric","Leather"],
+    engraving:["Metal","Glass","Bamboo","Ceramic"] },
+  { model:"P3",         laserType:"CO2",          wavelength:"10600 nm", power:"80W",
+    cutting:  ["Wood","Acrylic","Fabric","Leather"],
+    engraving:["Metal","Glass","Bamboo","Ceramic"] },
+  { model:"P3",         laserType:"IR (Fiber)",   wavelength:"1064 nm",  power:"5W",
+    cutting:  ["Brass","Stainless Steel","Aluminum"],
+    engraving:["Stainless Steel","Aluminum","Brass","Sliver","Plastic","Platinum","Titanium","Gold"] },
+  { model:"F1 Ultra",   laserType:"IR (Fiber)",   wavelength:"1064 nm",  power:"20W",
+    cutting:  ["Brass","Stainless Steel","Aluminum"],
+    engraving:["Stainless Steel","Aluminum","Brass","Sliver","Plastic","Platinum","Titanium","Gold"] },
+  { model:"F1 Ultra",   laserType:"Blue Diode",   wavelength:"445 nm",   power:"20W",
+    cutting:  ["Paper","Wood","Leather","MDF","Felt","Some Dark Opaque Acrylic"],
+    engraving:["Paper","Wood","Leather","MDF","Stainless Steel","Some Dark Opaque Acrylic",
+               "Bamboo","Fabric","Dark Glass","Ceramic","Jade","Marble","Shale",
+               "Cement","Brick","Plated Metal","Painted Metal"] },
+  { model:"F2 Ultra",   laserType:"MOPA (Fiber)", wavelength:"1064 nm",  power:"60W",
+    cutting:  ["Brass","Stainless Steel","Aluminum"],
+    engraving:["Stainless Steel","Aluminum","Brass","Sliver","Plastic","Platinum","Titanium","Gold"] },
+  { model:"F2 Ultra",   laserType:"Blue Diode",   wavelength:"445 nm",   power:"40W",
+    cutting:  ["Paper","Wood","Leather","MDF","Felt","Some Dark Opaque Acrylic"],
+    engraving:["Paper","Wood","Leather","MDF","Stainless Steel","Some Dark Opaque Acrylic",
+               "Bamboo","Fabric","Dark Glass","Ceramic","Jade","Marble","Shale",
+               "Cement","Brick","Plated Metal","Painted Metal"] },
+  { model:"F2 Ultra UV",laserType:"UV",           wavelength:"355 nm",   power:"5W",
+    cutting:  ["Glass","Plastics (PE, PP, EVA, PET, etc.)","Fabric","Leather","Acrylic (Not Fully Transparent)","Paper","Wood"],
+    engraving:["Glass","Crystal","Acrylic","Wood","Metal","Leather","Plastic","Rubber","Silicone","Ceramic"] }
 ];
 
-// ─── Collect all unique materials ─────────────────────────────────────────
-const allMaterials = [...new Set(
-  laserData.flatMap(r => [...r.cutting, ...r.engraving])
-)].sort((a, b) => a.localeCompare(b));
+// ─── JSONP fetch (works from file:// — no CORS required) ──────────────────
+// gviz/tq returns: callbackName({"table":{"cols":[...],"rows":[...]}})
+function fetchSheetJsonp() {
+  return new Promise((resolve, reject) => {
+    const cb = '__sheetCb_' + Date.now();
+    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, 8000);
+    function cleanup() {
+      delete window[cb];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      clearTimeout(timer);
+    }
+    window[cb] = data => { cleanup(); resolve(data); };
+    const script = document.createElement('script');
+    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:${cb}&gid=0`;
+    script.onerror = () => { cleanup(); reject(new Error('script load error')); };
+    document.head.appendChild(script);
+  });
+}
 
-// ─── Populate material dropdown ───────────────────────────────────────────
+// ─── Convert gviz JSON table → laserData array ─────────────────────────────
+// Columns: Model | Laser Type | Wavelength (nm) | Power | Cutting | Engraving
+function gvizToData(response) {
+  const str = (row, i) => {
+    const cell = (row.c || [])[i];
+    return (cell && cell.v != null) ? String(cell.v) : '';
+  };
+  const num = (row, i) => {
+    const cell = (row.c || [])[i];
+    return (cell && typeof cell.v === 'number') ? Math.round(cell.v) : str(row, i);
+  };
+  return (response.table.rows || []).map(row => ({
+    model:     str(row, 0),
+    laserType: str(row, 1),
+    wavelength:num(row, 2) + ' nm',
+    power:     str(row, 3),
+    cutting:   parseMaterials(str(row, 4)),
+    engraving: parseMaterials(str(row, 5)),
+  })).filter(r => r.model);
+}
+
+// ─── Material name parser ──────────────────────────────────────────────────
+// Sheet cells are comma-separated. Some materials contain commas inside
+// parentheses (e.g. "Plastics (PE, PP, EVA, PET, etc.)") — split carefully.
+
+function normalizeMaterial(s) {
+  s = s.trim();
+  if (!s) return '';
+  // Capitalize the first letter of each word only if it is currently lowercase,
+  // leaving abbreviations like "MDF", "PE", "EVA" intact.
+  return s.replace(/\b([a-z])/g, c => c.toUpperCase());
+}
+
+function parseMaterials(cell) {
+  if (!cell || !cell.trim()) return [];
+  const results = [];
+  let current = '';
+  let depth = 0;
+  for (const ch of cell) {
+    if      (ch === '(') { depth++; current += ch; }
+    else if (ch === ')') { depth--; current += ch; }
+    else if (ch === ',' && depth === 0) {
+      const m = normalizeMaterial(current);
+      if (m) results.push(m);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  const last = normalizeMaterial(current);
+  if (last) results.push(last);
+  return results;
+}
+
+
+// ─── DOM refs ──────────────────────────────────────────────────────────────
 const selMaterial = document.getElementById('sel-material');
 const selAction   = document.getElementById('sel-action');
 const resultsEl   = document.getElementById('results');
+const headerSub   = document.querySelector('header p');
 
-allMaterials.forEach(m => {
-  const opt = document.createElement('option');
-  opt.value = m;
-  opt.textContent = m;
-  selMaterial.appendChild(opt);
-});
+let laserData = [];
 
-// ─── Laser type → CSS class & display color ───────────────────────────────
-function laserClass(laserType) {
-  if (laserType === 'CO2')          return 'lt-co2';
-  if (laserType === 'IR (Fiber)')   return 'lt-ir';
-  if (laserType === 'Blue Diode')   return 'lt-blue';
-  if (laserType === 'MOPA (Fiber)') return 'lt-mopa';
-  if (laserType === 'UV')           return 'lt-uv';
-  return '';
+// ─── Laser type → CSS class ────────────────────────────────────────────────
+function laserClass(t) {
+  return { 'CO2':'lt-co2', 'IR (Fiber)':'lt-ir', 'Blue Diode':'lt-blue',
+           'MOPA (Fiber)':'lt-mopa', 'UV':'lt-uv' }[t] || '';
 }
 
-// ─── Render results ───────────────────────────────────────────────────────
+// ─── Populate material dropdown ────────────────────────────────────────────
+function populateMaterials() {
+  const prev = selMaterial.value;
+  while (selMaterial.options.length > 1) selMaterial.remove(1);
+  [...new Set(laserData.flatMap(r => [...r.cutting, ...r.engraving]))]
+    .sort((a, b) => a.localeCompare(b))
+    .forEach(m => {
+      const o = document.createElement('option');
+      o.value = o.textContent = m;
+      selMaterial.appendChild(o);
+    });
+  if (prev && [...selMaterial.options].some(o => o.value === prev))
+    selMaterial.value = prev;
+}
+
+// ─── Render results ────────────────────────────────────────────────────────
 function render() {
   const material = selMaterial.value;
   const action   = selAction.value;
 
   if (!material && !action) {
-    resultsEl.innerHTML = `
-      <div class="state-box">
-        <span class="icon">🔍</span>
-        <strong>Select a material and operation</strong>
-        <p>Use the dropdowns above to find compatible laser machines.</p>
-      </div>`;
+    resultsEl.innerHTML = `<div class="state-box"><span class="icon">🔍</span>
+      <strong>Select a material and operation</strong>
+      <p>Use the dropdowns above to find compatible laser machines.</p></div>`;
     return;
   }
-
   if (!material || !action) {
-    resultsEl.innerHTML = `
-      <div class="state-box">
-        <span class="icon">👆</span>
-        <p>${!material ? 'Choose a material to continue.' : 'Choose an operation (cutting or engraving) to continue.'}</p>
-      </div>`;
+    resultsEl.innerHTML = `<div class="state-box"><span class="icon">👆</span>
+      <p>${!material ? 'Choose a material to continue.' : 'Choose an operation (cutting or engraving) to continue.'}</p></div>`;
     return;
   }
 
@@ -421,52 +477,63 @@ function render() {
   );
 
   if (matches.length === 0) {
-    resultsEl.innerHTML = `
-      <div class="state-box">
-        <span class="icon">❌</span>
-        <strong>No compatible machines found</strong>
-        <p>${action === 'cutting' ? 'Cutting' : 'Engraving'} <em>${material}</em> is not supported by any listed machine.</p>
-      </div>`;
+    resultsEl.innerHTML = `<div class="state-box"><span class="icon">❌</span>
+      <strong>No compatible machines found</strong>
+      <p>${action === 'cutting' ? 'Cutting' : 'Engraving'} <em>${material}</em> is not supported by any listed machine.</p></div>`;
     return;
   }
 
+  const label = action === 'cutting' ? 'Cutting' : 'Engraving';
   const plural = matches.length === 1 ? 'machine' : 'machines';
-  const actionLabel = action === 'cutting' ? 'Cutting' : 'Engraving';
 
   resultsEl.innerHTML = `
-    <p class="results-heading">
-      ${matches.length} compatible ${plural} for
-      <span>${actionLabel} · ${material}</span>
-    </p>
+    <p class="results-heading">${matches.length} compatible ${plural} for
+      <span>${label} · ${material}</span></p>
     <div class="cards">
       ${matches.map(row => `
         <div class="card ${laserClass(row.laserType)}">
           <div class="card-model">${row.model}</div>
           <span class="card-laser-type">${row.laserType}</span>
           <div class="card-specs">
-            <div class="spec-row">
-              <span class="spec-label">Wavelength</span>
-              <span class="spec-value">${row.wavelength}</span>
-            </div>
-            <div class="spec-row">
-              <span class="spec-label">Power</span>
-              <span class="spec-value">${row.power}</span>
-            </div>
+            <div class="spec-row"><span class="spec-label">Wavelength</span><span class="spec-value">${row.wavelength}</span></div>
+            <div class="spec-row"><span class="spec-label">Power</span><span class="spec-value">${row.power}</span></div>
             <div class="divider"></div>
-            <div class="spec-row">
-              <span class="spec-label">Operation</span>
-              <span class="action-badge ${action}">${actionLabel}</span>
-            </div>
+            <div class="spec-row"><span class="spec-label">Operation</span><span class="action-badge ${action}">${label}</span></div>
           </div>
-        </div>
-      `).join('')}
+        </div>`).join('')}
     </div>`;
+}
+
+// ─── Boot ──────────────────────────────────────────────────────────────────
+async function init() {
+  selMaterial.disabled = selAction.disabled = true;
+  resultsEl.innerHTML = `<div class="state-box"><span class="icon">⏳</span>
+    <p>Loading data from spreadsheet…</p></div>`;
+
+  let live = false;
+  try {
+    const response = await fetchSheetJsonp();
+    const parsed = gvizToData(response);
+    if (!parsed.length) throw new Error('Empty result');
+    laserData = parsed;
+    live = true;
+  } catch (err) {
+    console.warn('Sheet fetch failed, using fallback data:', err);
+    laserData = FALLBACK_DATA;
+  }
+
+  headerSub.innerHTML = live
+    ? 'Find the right machine and laser for your material &nbsp;<span class="live-badge">● Live</span>'
+    : 'Find the right machine and laser for your material &nbsp;<span class="offline-badge">Cached data</span>';
+
+  selMaterial.disabled = selAction.disabled = false;
+  populateMaterials();
+  render();
 }
 
 selMaterial.addEventListener('change', render);
 selAction.addEventListener('change', render);
-
-render();
+init();
 </script>
 </body>
 </html>
